@@ -20,10 +20,18 @@ signal crc_en       : std_logic := '0';
 
 signal checksum_rdy : std_logic;
 
-constant poly         : std_logic_vector := "1100000111";
-constant data         : std_logic_vector := x"f7";
+--constant poly         : std_logic_vector := "1100000111";
+--constant poly         : std_logic_vector := "00000111";
+constant poly         : std_logic_vector := x"04C11DB7";
+constant init         : std_logic_vector := x"ffffffff"; --ffffffff
+constant refin        : std_logic        := '1';
+constant refout       : std_logic        := '1';
+constant xorout       : std_logic_vector := x"00000000"; --00000000
 
-signal checksum     : std_logic_vector((poly'length - 2) downto 0);
+constant data         : std_logic_vector := x"45ababab99";
+
+--signal checksum     : std_logic_vector((poly'length - 2) downto 0);
+signal checksum     : std_logic_vector((poly'length - 1) downto 0);
 ----------------------------------------------------------------------------------------------------
 begin  -- architecture
 ----------------------------------------------------------------------------------------------------
@@ -53,19 +61,19 @@ end process;
 generic_crc : entity crc_lib.generic_crc
   generic map (
     Polynomial        => poly,          -- std_logic_vector := "100000111";-- default = z^8 + z^2 + z + 1
-    InitialConditions => "0",           -- std_logic_vector := "0";
+    InitialConditions => init,          -- std_logic_vector := "0";
     DirectMethod      => '1',           -- std_logic := '0';
-    ReflectInputBytes => '0',           -- std_logic := '0';
-    ReflectChecksums  => '0',           -- std_logic := '0';
-    FinalXOR          => "0",           -- std_logic_vector := "0";
+    ReflectInputBytes => refin,         -- std_logic := '0';
+    ReflectChecksums  => refout,        -- std_logic := '0';
+    FinalXOR          => xorout,        -- std_logic_vector := "0";
     ChecksumsPerFrame => 1              -- integer := 1
     )
   port map (
     clk               => clk,           -- in  std_logic;
     rst               => rst,           -- in  std_logic;
     crc_en            => crc_en,        -- in  std_logic;
-    data              => data,          -- in  std_logic_vector(7 downto 0);
-    checksum          => checksum,      -- out std_logic_vector(7 downto 0);
+    data              => data,          -- in  std_logic_vector
+    checksum          => checksum,      -- out std_logic_vector
     checksum_rdy      => checksum_rdy   -- out std_logic
     );
 

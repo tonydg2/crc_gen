@@ -28,7 +28,8 @@ use ieee.numeric_std.all;
 
 entity generic_crc is
   generic (
-    Polynomial        : std_logic_vector  := "100000111"; -- default = z^8 + z^2 + z + 1
+    --Polynomial        : std_logic_vector  := "100000111"; -- default = z^8 + z^2 + z + 1
+    Polynomial        : std_logic_vector  := "00000111"; -- default = z^8 + z^2 + z + 1 = x"07"
     InitialConditions : std_logic_vector  := "0";         --
     DirectMethod      : std_logic         := '1';         -- more efficient, zero shifts not needed as in non-direct
     ReflectInputBytes : std_logic         := '0';         --
@@ -41,7 +42,7 @@ entity generic_crc is
     rst               : in  std_logic;
     crc_en            : in  std_logic;
     data              : in  std_logic_vector;
-    checksum          : out std_logic_vector; -- length of polynomial - 1
+    checksum          : out std_logic_vector; -- length of poly_i - 1
     checksum_rdy      : out std_logic
     );
 end generic_crc;
@@ -50,8 +51,10 @@ architecture rtl of generic_crc is
 -- components
 
 -- constants
+constant poly_i         : std_logic_vector((Polynomial'length) downto 0) := '1' & Polynomial;
+
 constant dataLen        : integer := (data'length - 1);
-constant checksumLen    : integer := (Polynomial'length - 2);
+constant checksumLen    : integer := (poly_i'length - 2);
 
 -- types
 type crc_sm_type is (IDLE, SHIFT, NONDIRECT_FLUSH, DIRECT_END);
@@ -68,7 +71,7 @@ signal checksum_i       : std_logic_vector(checksumLen downto 0);
 signal checksum_reflect : std_logic_vector(checksumLen downto 0);
 signal pre_checksum_rdy : std_logic;
 signal checksum_rdy_i   : std_logic;
-signal poly             : std_logic_vector((Polynomial'length - 1) downto 0);-- := "100000111";-- z^8 + z^2 + z + 1
+signal poly             : std_logic_vector((poly_i'length - 1) downto 0);-- := "100000111";-- z^8 + z^2 + z + 1
 signal d                : std_logic_vector((poly'length - 2) downto 0);
 
 ----------------------------------------------------------------------------------------------------
@@ -81,19 +84,19 @@ begin  -- architecture
 
 -- Unconstrained std_logic_vectors (if not explicit in the declared signal of the higher level
 -- entity where this component is instantiated) are default increasing index (0 to x, instead of x downto 0), 
--- so flip the Polynomial and data vectors first to be in decreasing index "downto" format. Check if the 
--- polynomial is ascending index and flip it.
-AscendingPolyGen : if (Polynomial'ascending = true) generate -- (0 to x) format? If so, flip the vector
-  PolyFlipGen : for i in 0 to (Polynomial'length - 1) generate
-    poly(i) <= Polynomial((Polynomial'length - 1) - i);
+-- so flip the poly_i and data vectors first to be in decreasing index "downto" format. Check if the 
+-- poly_i is ascending index and flip it.
+AscendingPolyGen : if (poly_i'ascending = true) generate -- (0 to x) format? If so, flip the vector
+  PolyFlipGen : for i in 0 to (poly_i'length - 1) generate
+    poly(i) <= poly_i((poly_i'length - 1) - i);
   end generate;
 --else generate -- vhdl 2008 only
---  poly <= polynomial;
+--  poly <= poly_i;
 end generate;
 
 -- if/else generate supported in vhdl 2008, older versions need two generate statements
-DescendingPolyGen : if (Polynomial'ascending = false) generate
-  poly <= Polynomial;
+DescendingPolyGen : if (poly_i'ascending = false) generate
+  poly <= poly_i;
 end generate;
 
 -- Same as above but with data, make sure in descending index format.
@@ -200,7 +203,7 @@ NonDirect_method : if (DirectMethod = '0') generate
       if crc_calc_en = '1' then
         -- first shift is always constant
         d(0) <= b xor d(d'length - 1); -- z^0
-        -- remaining shifts depend on polynomial
+        -- remaining shifts depend on poly_i
         poly_shift_gen : for i in 1 to (d'length - 1) loop -- z^1 ...
           d(i) <= d(i-1) xor (d(d'length - 1) and poly(i));
         end loop;
@@ -230,7 +233,7 @@ Direct_method : if (DirectMethod = '1') generate
       if crc_calc_en = '1' then
         -- first shift is always constant
         d(0) <= b xor d(d'length - 1); -- z^0
-        -- remaining shifts depend on polynomial
+        -- remaining shifts depend on poly_i
         poly_shift_gen : for i in 1 to (d'length - 1) loop -- z^1 ...
           d(i) <= d(i-1) xor (d(d'length - 1) and poly(i)) xor (b and poly(i));
         end loop;
