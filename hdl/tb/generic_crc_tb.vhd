@@ -79,6 +79,7 @@ begin
       verif8(x) <= "1";
     else 
       verif8(x) <= "0";
+      report "CRC8 FAILED index " & integer'image(x) severity warning;
     end if;
   end loop;
   
@@ -88,6 +89,7 @@ begin
       verif16(x) <= "1";
     else 
       verif16(x) <= "0";
+      report "CRC16 FAILED index " & integer'image(x) severity warning;
     end if;
   end loop;
 
@@ -97,6 +99,7 @@ begin
       verif32(x) <= "1";
     else 
       verif32(x) <= "0";
+      report "CRC32 FAILED index " & integer'image(x) severity warning;
     end if;
   end loop;
 
