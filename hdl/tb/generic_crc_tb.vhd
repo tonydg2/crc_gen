@@ -3,6 +3,7 @@
 library ieee, crc_lib;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use crc_lib.crc_pkg.all;
 
 entity generic_crc_tb is
 end entity generic_crc_tb;
@@ -22,16 +23,35 @@ signal checksum_rdy : std_logic;
 
 --constant poly         : std_logic_vector := "1100000111";
 --constant poly         : std_logic_vector := "00000111";
-constant poly         : std_logic_vector := x"04C11DB7";
-constant init         : std_logic_vector := x"ffffffff"; --ffffffff
-constant refin        : std_logic        := '1';
-constant refout       : std_logic        := '1';
-constant xorout       : std_logic_vector := x"00000000"; --00000000
+constant poly         : std_logic_vector := x"9b";
+constant init         : std_logic_vector := x"ff"; --ffffffff
+constant refin        : std_logic        := '0';
+constant refout       : std_logic        := '0';
+constant xorout       : std_logic_vector := x"00"; --00000000
 
-constant data         : std_logic_vector := x"45ababab99";
+--constant data         : std_logic_vector := x"45ababab99";
+--constant data         : std_logic_vector := x"5a66666b";
+constant data         : std_logic_vector := x"05";
 
 --signal checksum     : std_logic_vector((poly'length - 2) downto 0);
 signal checksum     : std_logic_vector((poly'length - 1) downto 0);
+
+
+
+--type testArray is array (natural range <>) of std_logic_vector;
+--constant testCon : testArray(0 to 2)(31 downto 0) := (x"04C11DB7", x"ffffffff", x"fffffff7");
+
+type checkSumArray is array (natural range <>) of std_logic_vector;
+
+signal cs8 : checkSumArray(0 to CRC8_MAX-1)(7 downto 0);
+signal verif8 : checkSumArray(0 to CRC8_MAX-1)(0 downto 0);
+signal cs16 : checkSumArray(0 to CRC16_MAX-1)(15 downto 0);
+signal verif16 : checkSumArray(0 to CRC16_MAX-1)(0 downto 0);
+signal cs32 : checkSumArray(0 to CRC32_MAX-1)(31 downto 0);
+signal verif32 : checkSumArray(0 to CRC32_MAX-1)(0 downto 0);
+
+signal test1 : std_logic_vector(7 downto 0);
+
 ----------------------------------------------------------------------------------------------------
 begin  -- architecture
 ----------------------------------------------------------------------------------------------------
@@ -46,7 +66,41 @@ begin
   crc_en <= '1';
   wait for 10 ns;
   crc_en <= '0';
+  test1 <= CRC8_TEST_VALUES.poly(0);
+  wait for 10 ns;
+  test1 <= CRC8_TEST_VALUES.poly(1);
 
+
+  wait until (checksum_rdy = '1');
+  wait until (checksum_rdy = '0');
+  for x in 0 to (CRC8_MAX-1) loop 
+    --wait until (checksum_rdy = '1');
+    if (cs8(x) = CRC8_TEST_VALUES.res(x)) then 
+      verif8(x) <= "1";
+    else 
+      verif8(x) <= "0";
+    end if;
+  end loop;
+  
+  for x in 0 to (CRC16_MAX-1) loop 
+    --wait until (checksum_rdy = '1');
+    if (cs16(x) = CRC16_TEST_VALUES.res(x)) then 
+      verif16(x) <= "1";
+    else 
+      verif16(x) <= "0";
+    end if;
+  end loop;
+
+  for x in 0 to (CRC32_MAX-1) loop 
+    --wait until (checksum_rdy = '1');
+    if (cs32(x) = CRC32_TEST_VALUES.res(x)) then 
+      verif32(x) <= "1";
+    else 
+      verif32(x) <= "0";
+    end if;
+  end loop;
+
+ 
  -- if poly'ascending = true then
  --   report "*** true*****";
  -- else
@@ -56,9 +110,6 @@ begin
 
   wait;
 end process;
-
-
---gen_crc_inst : for i in 0 to 3 generate 
 
   generic_crc : entity crc_lib.generic_crc
     generic map (
@@ -79,6 +130,69 @@ end process;
       checksum_rdy      => checksum_rdy   -- out std_logic
       );
 
+
+gen_crc8_inst : for x in 0 to (CRC8_MAX-1) generate 
+  generic_crc : entity crc_lib.generic_crc
+    generic map (
+      Polynomial        => CRC8_TEST_VALUES.poly(x),
+      InitialConditions => CRC8_TEST_VALUES.init(x),
+      ReflectInputBytes => CRC8_TEST_VALUES.refi(x),
+      ReflectChecksums  => CRC8_TEST_VALUES.refo(x),
+      FinalXOR          => CRC8_TEST_VALUES.fxor(x),
+      DirectMethod      => '1',
+      ChecksumsPerFrame => 1
+      )
+    port map (
+      clk               => clk,       -- in  std_logic;
+      rst               => rst,       -- in  std_logic;
+      crc_en            => crc_en,    -- in  std_logic;
+      data              => data,      -- in  std_logic_vector
+      checksum          => cs8(x),      -- out std_logic_vector
+      checksum_rdy      => open       -- out std_logic
+      );
+end generate;
+
+gen_crc16_inst : for x in 0 to (CRC16_MAX-1) generate 
+  generic_crc : entity crc_lib.generic_crc
+    generic map (
+      Polynomial        => CRC16_TEST_VALUES.poly(x),
+      InitialConditions => CRC16_TEST_VALUES.init(x),
+      ReflectInputBytes => CRC16_TEST_VALUES.refi(x),
+      ReflectChecksums  => CRC16_TEST_VALUES.refo(x),
+      FinalXOR          => CRC16_TEST_VALUES.fxor(x),
+      DirectMethod      => '1',
+      ChecksumsPerFrame => 1
+      )
+    port map (
+      clk               => clk,       -- in  std_logic;
+      rst               => rst,       -- in  std_logic;
+      crc_en            => crc_en,    -- in  std_logic;
+      data              => data,      -- in  std_logic_vector
+      checksum          => cs16(x),      -- out std_logic_vector
+      checksum_rdy      => open       -- out std_logic
+      );
+end generate;
+
+gen_crc32_inst : for x in 0 to (CRC32_MAX-1) generate 
+  generic_crc : entity crc_lib.generic_crc
+    generic map (
+      Polynomial        => CRC32_TEST_VALUES.poly(x),
+      InitialConditions => CRC32_TEST_VALUES.init(x),
+      ReflectInputBytes => CRC32_TEST_VALUES.refi(x),
+      ReflectChecksums  => CRC32_TEST_VALUES.refo(x),
+      FinalXOR          => CRC32_TEST_VALUES.fxor(x),
+      DirectMethod      => '1',
+      ChecksumsPerFrame => 1
+      )
+    port map (
+      clk               => clk,       -- in  std_logic;
+      rst               => rst,       -- in  std_logic;
+      crc_en            => crc_en,    -- in  std_logic;
+      data              => data,      -- in  std_logic_vector
+      checksum          => cs32(x),      -- out std_logic_vector
+      checksum_rdy      => open       -- out std_logic
+      );
+end generate;
 
 
 end architecture bhv;
