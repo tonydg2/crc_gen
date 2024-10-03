@@ -26,3 +26,5 @@ vsim -do run.do
 
 # vsim -voptargs=”+acc”
 # vsim -batch
+
+# log -r /*

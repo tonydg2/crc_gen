@@ -1,3 +1,9 @@
+-- TODO 2024:
+-- CRC does not match online tool when reflect is true and data is greater than 8bits 
+--    ReflectInputBytesGen : check this, not really reflecting 'bytes', refelects the entire data
+--        this may be why it works for 8bits only. try reflecting each byte... 
+--        *Confirmed this probably the issue (stackoverflow)
+--    ReflectChecksumGen : same as above, per byte
 -------------------------------------------------------------------------------
 -- Title      : Generic CRC
 -- Project    : 
@@ -8,7 +14,7 @@
 -- Created    : 2021-02-24
 -- Last update: 2021-02-24
 -- Platform   : 
--- Standard   : VHDL'93/02
+-- Standard   : 
 -------------------------------------------------------------------------------
 -- Description: Generic CRC
 -- Generic to polynomial value and length, data length, initial conditions, 
@@ -32,16 +38,18 @@ entity generic_crc is
     Polynomial        : std_logic_vector  := "00000111"; -- default = z^8 + z^2 + z + 1 = x"07"
     InitialConditions : std_logic_vector  := "0";         --
     DirectMethod      : std_logic         := '1';         -- more efficient, zero shifts not needed as in non-direct
-    ReflectInputBytes : std_logic         := '0';         --
-    ReflectChecksums  : std_logic         := '0';         --
+--    ReflectInputBytes : std_logic         := '0';         --
+--    ReflectChecksums  : std_logic         := '0';         --
+    ReflectIO         : std_logic         := '0';
     FinalXOR          : std_logic_vector  := "0";         --
-    ChecksumsPerFrame : integer           := 1            -- N/A
+    ChecksumsPerFrame : integer           := 1;            -- N/A
+    ReflectByte       : std_logic         := '1'
     );
   port (
     clk               : in  std_logic;
     rst               : in  std_logic;
     crc_en            : in  std_logic;
-    data              : in  std_logic_vector;
+    data              : in  std_logic_vector; -- must be divisible by 8
     checksum          : out std_logic_vector; -- length of poly_i - 1
     checksum_rdy      : out std_logic
     );
@@ -51,7 +59,10 @@ architecture rtl of generic_crc is
 -- components
 
 -- constants
-constant poly_i         : std_logic_vector((Polynomial'length) downto 0) := '1' & Polynomial;
+constant reflectBoundary    : integer := 8; -- remove this
+constant poly_i             : std_logic_vector((Polynomial'length) downto 0) := '1' & Polynomial;
+constant ReflectInputBytes  : std_logic := ReflectIO;
+constant ReflectChecksums   : std_logic := ReflectIO;
 
 constant dataLen        : integer := (data'length - 1);
 constant checksumLen    : integer := (poly_i'length - 2);
@@ -90,31 +101,38 @@ AscendingPolyGen : if (poly_i'ascending = true) generate -- (0 to x) format? If 
   PolyFlipGen : for i in 0 to (poly_i'length - 1) generate
     poly(i) <= poly_i((poly_i'length - 1) - i);
   end generate;
---else generate -- vhdl 2008 only
---  poly <= poly_i;
+else generate -- vhdl 2008 only
+  poly <= poly_i;
 end generate;
 
 -- if/else generate supported in vhdl 2008, older versions need two generate statements
-DescendingPolyGen : if (poly_i'ascending = false) generate
-  poly <= poly_i;
-end generate;
+--DescendingPolyGen : if (poly_i'ascending = false) generate
+--  poly <= poly_i;
+--end generate;
 
 -- Same as above but with data, make sure in descending index format.
 AscendingDataGen : if (data'ascending = true) generate
   DataFlipGen : for i in 0 to (data'length - 1) generate
     data_r(i) <= data((data'length - 1) - i);
   end generate;
-  --else generate -- vhdl 2008 only
-  --  data_r    <= data;
-end generate;
-
--- if/else generate supported in vhdl 2008, older versions need two generate statements
-DescendingDataGen : if (data'ascending = false) generate
+else generate -- vhdl 2008 only
   data_r    <= data;
 end generate;
 
+-- if/else generate supported in vhdl 2008, older versions need two generate statements
+--DescendingDataGen : if (data'ascending = false) generate
+--  data_r    <= data;
+--end generate;
+
 -- top IO
-checksum     <= checksum_i;
+reflectFinalGen : if (ReflectIO = '1' AND checksum_i'length > 8) generate
+  constant num_bytes : integer := checksum_i'length / 8;
+  SwapBytes: for i in 0 to num_bytes - 1 generate
+    checksum((i+1)*8 - 1 downto i*8) <= checksum_i((num_bytes-i)*8 - 1 downto (num_bytes-i-1)*8);
+  end generate;
+else generate
+  checksum     <= checksum_i;     -- reverse all bytes - only for refin/refout = 1
+end generate;
 checksum_rdy <= checksum_rdy_i;
 
 
@@ -122,16 +140,31 @@ checksum_rdy <= checksum_rdy_i;
 -- this might have redundancy due to the above flipping operation, but...gonna leave it, synthesis tools 
 -- will optimize.
 ReflectInputBytesGen : if (ReflectInputBytes = '1') generate
-  DataReflectGen : for i in 0 to (data_r'length - 1) generate
-    data_i(i) <= data_r((data_r'length - 1) - i);
-  end generate;
-  --else generate -- vhdl 2008
-  -- data_i <= data_r;
-end generate;
 
-ReflectInputBytesGen2 : if (ReflectInputBytes = '0') generate
+  refbytegen : if (ReflectByte = '1') generate
+    
+    DataReflectGenB : for byte_index in 0 to (data_r'length / reflectBoundary - 1) generate
+      DataReflectGenByte : for bit_index in 0 to (reflectBoundary-1) generate
+        data_i(byte_index * reflectBoundary + bit_index) <= data_r((byte_index + 1) * reflectBoundary - 1 - bit_index);
+      end generate;
+    end generate;
+
+  else generate
+    
+    DataReflectGen : for i in 0 to (data_r'length - 1) generate
+      data_i(i) <= data_r((data_r'length - 1) - i);
+    end generate;
+
+  end generate;
+
+else generate -- vhdl 2008
   data_i <= data_r;
 end generate;
+
+
+--ReflectInputBytesGen2 : if (ReflectInputBytes = '0') generate
+--  data_i <= data_r;
+--end generate;
 
 
 -- serialize input data vector
@@ -255,16 +288,30 @@ end generate;
 
 -- reflect checksum before final XOR
 ReflectChecksumGen : if (ReflectChecksums = '1') generate
-  ReflectChecksumBitsGen : for i in 0 to (d'length - 1) generate
-    checksum_reflect(i) <= d((d'length - 1) - i);
-  end generate;
-  --else generate -- vhdl 2008
-  -- checksum_reflect <= d;
-end generate;
 
-ReflectChecksumGen2 : if (ReflectChecksums = '0') generate
+  refbytegen : if (ReflectByte = '1') generate 
+
+    ReflectChecksumBitsGenB : for byte_index in 0 to (d'length / reflectBoundary - 1) generate
+      ReflectChecksumBitsGenByte : for bit_index in 0 to (reflectBoundary - 1) generate
+        checksum_reflect(byte_index * reflectBoundary + bit_index) <= d((byte_index + 1) * reflectBoundary - 1 - bit_index);
+      end generate;
+    end generate;
+
+  else generate
+
+    ReflectChecksumBitsGen : for i in 0 to (d'length - 1) generate
+      checksum_reflect(i) <= d((d'length - 1) - i);
+    end generate;
+  
+  end generate;
+
+else generate -- vhdl 2008
   checksum_reflect <= d;
 end generate;
+
+--ReflectChecksumGen2 : if (ReflectChecksums = '0') generate
+--  checksum_reflect <= d;
+--end generate;
 
 
 -- final XOR, latch checksum value, and pulse ready strobe
