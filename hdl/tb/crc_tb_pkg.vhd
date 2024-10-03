@@ -137,6 +137,7 @@ package crc_pkg is
     fxor => (x"00", x"00",  x"00",  x"00",  x"00",  x"00",  x"55",  x"00",  x"00",  x"00"),
     refi => ('0',     '0',    '1',    '0',    '1',    '0',    '0',    '1',    '1',    '1'),
     refo => ('0',     '0',    '1',    '0',    '1',    '0',    '0',    '1',    '1',    '1')
+    --        0        1       2       3       4       5       6       7       8       9
   );
 
   constant CRC16_CONFIG : crc16_rec := (
@@ -147,6 +148,7 @@ package crc_pkg is
     fxor => (x"0000",x"0000",x"0000",x"0000",x"0000",x"0000",x"0001",x"0000",x"FFFF",x"FFFF",x"FFFF",x"FFFF",x"0000",x"0000",x"0000",x"0000",x"0000",x"FFFF",x"0000",x"0000",x"0000",x"FFFF",x"0000"),
     refi => ('0','1','0','0','0','0','0','0','1','0','0','1','1','1','0','0','1','1','1','1','1','1','0'),
     refo => ('0','1','0','0','0','0','0','0','1','0','0','1','1','1','0','0','1','1','1','1','1','1','0')
+    --        0   1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16  17  18  19  20  21  22
   );
 
   constant CRC32_CONFIG : crc32_rec := (
@@ -157,6 +159,7 @@ package crc_pkg is
     fxor => (x"FFFFFFFF",x"FFFFFFFF",x"FFFFFFFF",x"FFFFFFFF",x"00000000",x"00000000",x"FFFFFFFF",x"00000000",x"00000000"),
     refi => ('1','0','1','1','1','0','0','0','0'),
     refo => ('1','0','1','1','1','0','0','0','0')
+    --        0   1   2   3   4   5   6   7   8
   );
 
 
@@ -195,6 +198,28 @@ package crc_pkg is
                 (x"F26D6A3E",x"468636C7",x"16141340",x"8A7F76D8",x"0D9295C1",x"B979C938",x"088E8973",x"CF0F3C83",x"000036C3")
                )
   );
+
+  type data16_test_rec is record 
+    data    : dataArray(0 to TESTS_MAX-1)(15 downto 0); -- input value
+    csum8   : csumArray(0 to TESTS_MAX-1)(0 to CRC8_MAX-1)(7 downto 0);
+    csum16  : csumArray(0 to TESTS_MAX-1)(0 to CRC16_MAX-1)(15 downto 0);
+    csum32  : csumArray(0 to TESTS_MAX-1)(0 to CRC32_MAX-1)(31 downto 0);
+  end record data16_test_rec;
+
+  constant DATA16_TEST_VALUES : data16_test_rec := (
+    data    => (x"fa05", x"9975"),
+    csum8   => ((x"8D",x"14",x"4E",x"74",x"B8",x"90",x"D8",x"41",x"8E",x"39"),
+                (x"10",x"07",x"6E",x"08",x"B4",x"82",x"45",x"B6",x"13",x"16")
+               ),
+    csum16  => ((x"B1A0",x"A382",x"286F",x"9C11",x"FB94",x"9C35",x"6973",x"6972",x"F8AD",x"5837",x"4E5F",x"5C7D",x"266D",x"25E3",x"1413",x"0659",x"936C",x"EC7C",x"C875",x"D6D5",x"1383",x"D992",x"ACAF"),
+                (x"914E",x"B7AB",x"0881",x"D737",x"C841",x"D713",x"4989",x"4988",x"D89E",x"3E5C",x"6EB1",x"4854",x"1AD7",x"1959",x"1902",x"28F7",x"AFD6",x"F855",x"F4CF",x"EA6F",x"07AA",x"E528",x"8C41")
+               ),
+
+    csum32  => ((x"DFE0EF47",x"310F3455",x"3A5BBEE6",x"F662AC98",x"201F10B8",x"CEF0CBAA",x"31B85028",x"44288F64",x"00677413"),
+                (x"C135A61F",x"C2B52C0B",x"FFB86774",x"065618A8",x"3ECA59E0",x"3D4AD3F4",x"C2024876",x"A5F23D40",x"005891C3")
+               )
+  );
+
 
 
 end package crc_pkg;

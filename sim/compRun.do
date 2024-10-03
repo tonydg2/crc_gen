@@ -4,4 +4,4 @@ vcom ../hdl/tb/generic_crc_tb.vhd   -2008 -work   work
 
 restart
 
-run 1us
+run 5us

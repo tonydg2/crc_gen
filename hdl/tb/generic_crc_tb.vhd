@@ -44,12 +44,16 @@ signal checksum     : std_logic_vector((poly'length - 1) downto 0);
 type checkSumArray is array (natural range <>) of std_logic_vector;
 
 --signal cs8 : checkSumArray(0 to CRC8_MAX-1)(7 downto 0);
-signal cs8 : csumArray(0 to TESTS_MAX-1)(0 to CRC8_MAX-1)(7 downto 0);
-signal verif8 : csumArray(0 to TESTS_MAX-1)(0 to CRC8_MAX-1)(0 downto 0);
-signal cs16 : checkSumArray(0 to CRC16_MAX-1)(15 downto 0);
-signal verif16 : checkSumArray(0 to CRC16_MAX-1)(0 downto 0);
-signal cs32 : checkSumArray(0 to CRC32_MAX-1)(31 downto 0);
-signal verif32 : checkSumArray(0 to CRC32_MAX-1)(0 downto 0);
+signal cs8      : csumArray(0 to TESTS_MAX-1)(0 to CRC8_MAX-1)(7 downto 0);
+signal verif8   : csumArray(0 to TESTS_MAX-1)(0 to CRC8_MAX-1)(0 downto 0);
+signal cs16     : csumArray(0 to TESTS_MAX-1)(0 to CRC16_MAX-1)(15 downto 0);
+signal verif16  : csumArray(0 to TESTS_MAX-1)(0 to CRC16_MAX-1)(0 downto 0);
+signal cs32     : csumArray(0 to TESTS_MAX-1)(0 to CRC32_MAX-1)(31 downto 0);
+signal verif32  : csumArray(0 to TESTS_MAX-1)(0 to CRC32_MAX-1)(0 downto 0);
+--signal cs16 : checkSumArray(0 to CRC16_MAX-1)(15 downto 0);
+--signal verif16 : checkSumArray(0 to CRC16_MAX-1)(0 downto 0);
+--signal cs32 : checkSumArray(0 to CRC32_MAX-1)(31 downto 0);
+--signal verif32 : checkSumArray(0 to CRC32_MAX-1)(0 downto 0);
 
 --signal cs8_data : 
 
@@ -77,10 +81,12 @@ begin
   wait until (checksum_rdy = '1');
   wait until (checksum_rdy = '0');
 
+  wait for 500 ns;
+
   for i in 0 to (TESTS_MAX-1) loop 
     for x in 0 to (CRC8_MAX-1) loop 
       --wait until (checksum_rdy = '1');
-      if (cs8(i)(x) = DATA8_TEST_VALUES.csum8(i)(x)) then 
+      if (cs8(i)(x) = DATA16_TEST_VALUES.csum8(i)(x)) then 
 --      if (cs8(i)(x) = chksums8(i)(x)) then 
         verif8(i)(x) <= "1";
       else 
@@ -90,6 +96,27 @@ begin
     end loop;
   end loop;
 
+  for i in 0 to (TESTS_MAX-1) loop 
+    for x in 0 to (CRC16_MAX-1) loop 
+      if (cs16(i)(x) = DATA16_TEST_VALUES.csum16(i)(x)) then 
+        verif16(i)(x) <= "1";
+      else 
+        verif16(i)(x) <= "0";
+        report "CRC16 FAILED i:" & integer'image(i) & " x:" & integer'image(x) severity warning;
+      end if;
+    end loop;
+  end loop;
+
+  for i in 0 to (TESTS_MAX-1) loop 
+    for x in 0 to (CRC32_MAX-1) loop 
+      if (cs32(i)(x) = DATA16_TEST_VALUES.csum32(i)(x)) then 
+        verif32(i)(x) <= "1";
+      else 
+        verif32(i)(x) <= "0";
+        report "CRC32 FAILED i:" & integer'image(i) & " x:" & integer'image(x) severity warning;
+      end if;
+    end loop;
+  end loop;
 
 
 --  for x in 0 to (CRC8_MAX-1) loop 
@@ -168,8 +195,54 @@ gen_crc8_test : for i in 0 to (TESTS_MAX-1) generate
         clk               => clk,       -- in  std_logic;
         rst               => rst,       -- in  std_logic;
         crc_en            => crc_en,    -- in  std_logic;
-        data              => DATA8_TEST_VALUES.data(i),      -- in  std_logic_vector
+        data              => DATA16_TEST_VALUES.data(i),      -- in  std_logic_vector
         checksum          => cs8(i)(x),      -- out std_logic_vector
+        checksum_rdy      => open       -- out std_logic
+        );
+  end generate;
+end generate;
+
+gen_crc16_test : for i in 0 to (TESTS_MAX-1) generate 
+  gen_crc16_inst : for x in 0 to (CRC16_MAX-1) generate 
+    generic_crc : entity crc_lib.generic_crc
+      generic map (
+        Polynomial        => CRC16_CONFIG.poly(x),
+        InitialConditions => CRC16_CONFIG.init(x),
+        ReflectInputBytes => CRC16_CONFIG.refi(x),
+        ReflectChecksums  => CRC16_CONFIG.refo(x),
+        FinalXOR          => CRC16_CONFIG.fxor(x),
+        DirectMethod      => '1',
+        ChecksumsPerFrame => 1
+        )
+      port map (
+        clk               => clk,       -- in  std_logic;
+        rst               => rst,       -- in  std_logic;
+        crc_en            => crc_en,    -- in  std_logic;
+        data              => DATA16_TEST_VALUES.data(i),      -- in  std_logic_vector
+        checksum          => cs16(i)(x),      -- out std_logic_vector
+        checksum_rdy      => open       -- out std_logic
+        );
+  end generate;
+end generate;
+
+gen_crc32_test : for i in 0 to (TESTS_MAX-1) generate 
+  gen_crc32_inst : for x in 0 to (CRC32_MAX-1) generate 
+    generic_crc : entity crc_lib.generic_crc
+      generic map (
+        Polynomial        => CRC32_CONFIG.poly(x),
+        InitialConditions => CRC32_CONFIG.init(x),
+        ReflectInputBytes => CRC32_CONFIG.refi(x),
+        ReflectChecksums  => CRC32_CONFIG.refo(x),
+        FinalXOR          => CRC32_CONFIG.fxor(x),
+        DirectMethod      => '1',
+        ChecksumsPerFrame => 1
+        )
+      port map (
+        clk               => clk,       -- in  std_logic;
+        rst               => rst,       -- in  std_logic;
+        crc_en            => crc_en,    -- in  std_logic;
+        data              => DATA16_TEST_VALUES.data(i),      -- in  std_logic_vector
+        checksum          => cs32(i)(x),      -- out std_logic_vector
         checksum_rdy      => open       -- out std_logic
         );
   end generate;
