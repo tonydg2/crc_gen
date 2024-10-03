@@ -44,8 +44,8 @@ signal checksum     : std_logic_vector((poly'length - 1) downto 0);
 type checkSumArray is array (natural range <>) of std_logic_vector;
 
 --signal cs8 : checkSumArray(0 to CRC8_MAX-1)(7 downto 0);
-signal cs8 : csArray(0 to TESTS_MAX-1)(0 to CRC8_MAX-1)(7 downto 0);
-signal verif8 : csArray(0 to TESTS_MAX-1)(0 to CRC8_MAX-1)(0 downto 0);
+signal cs8 : csumArray(0 to TESTS_MAX-1)(0 to CRC8_MAX-1)(7 downto 0);
+signal verif8 : csumArray(0 to TESTS_MAX-1)(0 to CRC8_MAX-1)(0 downto 0);
 signal cs16 : checkSumArray(0 to CRC16_MAX-1)(15 downto 0);
 signal verif16 : checkSumArray(0 to CRC16_MAX-1)(0 downto 0);
 signal cs32 : checkSumArray(0 to CRC32_MAX-1)(31 downto 0);
@@ -80,7 +80,8 @@ begin
   for i in 0 to (TESTS_MAX-1) loop 
     for x in 0 to (CRC8_MAX-1) loop 
       --wait until (checksum_rdy = '1');
-      if (cs8(i)(x) = CRC8_TEST_VALUES.chksums(i)(x)) then 
+      if (cs8(i)(x) = DATA8_TEST_VALUES.csum8(i)(x)) then 
+--      if (cs8(i)(x) = chksums8(i)(x)) then 
         verif8(i)(x) <= "1";
       else 
         verif8(i)(x) <= "0";
@@ -167,7 +168,7 @@ gen_crc8_test : for i in 0 to (TESTS_MAX-1) generate
         clk               => clk,       -- in  std_logic;
         rst               => rst,       -- in  std_logic;
         crc_en            => crc_en,    -- in  std_logic;
-        data              => CRC8_TEST_VALUES.data(i),      -- in  std_logic_vector
+        data              => DATA8_TEST_VALUES.data(i),      -- in  std_logic_vector
         checksum          => cs8(i)(x),      -- out std_logic_vector
         checksum_rdy      => open       -- out std_logic
         );

@@ -1,3 +1,4 @@
+-- https://www.texttool.com/crc-online
 -- INPUT VALUE = 0x5
 --
 --  Algorithm	                  Result	        Check	          Poly	          Init	    RefIn	  RefOut	      XorOut
@@ -76,6 +77,8 @@
 --RefIn,      '1','0','1','1','1','0','0','0','0' 
 --RefOut,     '1','0','1','1','1','0','0','0','0' 
 
+--------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -87,7 +90,7 @@ package crc_pkg is
   type boolArray  is array (natural range <>) of std_logic;
 
   type innerArray is array (natural range <>) of std_logic_vector;
-  type csArray   is array (natural range <>) of InnerArray;
+  type csumArray  is array (natural range <>) of InnerArray;
   --type csArray    is array (natural range <>) of array (natural range <>) of std_logic_vector(7 downto 0);
 
 
@@ -156,15 +159,41 @@ package crc_pkg is
     refo => ('1','0','1','1','1','0','0','0','0')
   );
 
-  type crc8_test_rec is record 
-    data    : dataArray(0 to TESTS_MAX-1)(7 downto 0); -- input value
-    chksums : csArray(0 to TESTS_MAX-1)(0 to CRC8_MAX-1)(7 downto 0);
-  end record crc8_test_rec;
 
-  constant CRC8_TEST_VALUES : crc8_test_rec := (
+--  constant test_data4   : dataArray(0 to TESTS_MAX-1)(3 downto 0)   := (x"5", x"a");
+--
+--  constant test_data8   : dataArray(0 to TESTS_MAX-1)(7 downto 0)   := (x"05", x"75");
+--  constant chksums8     : csumArray(0 to TESTS_MAX-1)(0 to CRC8_MAX-1)(7 downto 0) := (
+--    (x"1B", x"21",  x"83",  x"2B",  x"A6",  x"97",  x"4E",  x"3F",  x"59",  x"F6"),
+--    (x"4C", x"BF",  x"65",  x"40",  x"C3",  x"CE",  x"19",  x"C7",  x"0D",  x"58"));
+--  
+--  
+--  constant test_data12  : dataArray(0 to TESTS_MAX-1)(11 downto 0)  := (x"105", x"f75");
+--  constant test_data16  : dataArray(0 to TESTS_MAX-1)(15 downto 0)  := (x"c105", x"0f75");
+--  constant test_data20  : dataArray(0 to TESTS_MAX-1)(19 downto 0)  := (x"9c105", x"90f75");
+--  constant test_data32  : dataArray(0 to TESTS_MAX-1)(31 downto 0)  := (x"1239c105", x"56790f75");
+--  constant test_data36  : dataArray(0 to TESTS_MAX-1)(35 downto 0)  := (x"01239c105", x"d56790f75");
+
+
+  type data8_test_rec is record 
+    data    : dataArray(0 to TESTS_MAX-1)(7 downto 0); -- input value
+    csum8   : csumArray(0 to TESTS_MAX-1)(0 to CRC8_MAX-1)(7 downto 0);
+    csum16  : csumArray(0 to TESTS_MAX-1)(0 to CRC16_MAX-1)(15 downto 0);
+    csum32  : csumArray(0 to TESTS_MAX-1)(0 to CRC32_MAX-1)(31 downto 0);
+  end record data8_test_rec;
+
+  constant DATA8_TEST_VALUES : data8_test_rec := (
     data    => (x"05", x"75"),
-    chksums => ((x"1B", x"21",  x"83",  x"2B",  x"A6",  x"97",  x"4E",  x"3F",  x"59",  x"F6"),
-                (x"4C", x"BF",  x"65",  x"40",  x"C3",  x"CE",  x"19",  x"C7",  x"0D",  x"58"))
+    csum8   => ((x"1B", x"21",  x"83",  x"2B",  x"A6",  x"97",  x"4E",  x"3F",  x"59",  x"F6"),
+                (x"4C", x"BF",  x"65",  x"40",  x"C3",  x"CE",  x"19",  x"C7",  x"0D",  x"58")
+               ),
+    csum16  => ((x"B155",x"03C0",x"9C39",x"001E",x"1259",x"8E1D",x"13AC",x"13AD",x"10D9",x"370E",x"4EAA",x"FC3F",x"582A",x"CE19",x"39B2",x"C372",x"D29A",x"BC80",x"0653",x"57AD",x"437F",x"A7D5",x"50A5"),
+                (x"CFC2",x"E7C1",x"E2AE",x"813D",x"5330",x"0F3E",x"9DD5",x"9DD4",x"D843",x"855C",x"303D",x"183E",x"2BAD",x"BD9E",x"1C66",x"0E7B",x"A11D",x"5881",x"75D4",x"242A",x"A77E",x"D452",x"2E32")
+               ),
+
+    csum32  => ((x"A2681B02",x"A6322B20",x"678C474D",x"FAF0A950",x"5D97E4FD",x"59CDD4DF",x"E83A9494",x"078785FA",x"00000213"),
+                (x"F26D6A3E",x"468636C7",x"16141340",x"8A7F76D8",x"0D9295C1",x"B979C938",x"088E8973",x"CF0F3C83",x"000036C3")
+               )
   );
 
 
