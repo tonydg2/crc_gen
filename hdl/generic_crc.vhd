@@ -1,5 +1,7 @@
+-- TODO: change some single letter signals (d,b) to something longer... bad practice
 -- Input data width must be divisible by 8.
--- 
+-- ascending/descending poly/data vector stuff not tested and not going to.
+-- poly/data tested in normal descending format (left is msb)
 -------------------------------------------------------------------------------
 -- Title      : Generic CRC
 -- Project    : 
@@ -30,16 +32,11 @@ use ieee.numeric_std.all;
 
 entity generic_crc is
   generic (
-    --Polynomial        : std_logic_vector  := "100000111"; -- default = z^8 + z^2 + z + 1
     Polynomial        : std_logic_vector  := "00000111"; -- default = z^8 + z^2 + z + 1 = x"07"
-    InitialConditions : std_logic_vector  := "0";         --
---    DirectMethod      : std_logic         := '1';         -- more efficient, zero shifts not needed as in non-direct
---    ReflectInputBytes : std_logic         := '0';         --
---    ReflectChecksums  : std_logic         := '0';         --
+    InitialConditions : std_logic_vector  := "0";
     ReflectIO         : std_logic         := '0';
-    FinalXOR          : std_logic_vector  := "0";         --
-    ChecksumsPerFrame : integer           := 1;            -- N/A
-    ReflectByte       : std_logic         := '1'
+    FinalXOR          : std_logic_vector  := "0"
+--    ChecksumsPerFrame : integer           := 1    -- Not implemented
     );
   port (
     clk               : in  std_logic;
@@ -57,6 +54,10 @@ architecture rtl of generic_crc is
 -- constants
 -- nondirect method no longer works. somehow it broke when fixing reflect/byte swapping issues. don't care / don't fix, just remove
 constant DirectMethod       : std_logic := '1'; -- DO NOT MODIFY
+-- leaving this in, setting to 0 will cause 'reflect' the entire checksum, instead of per byte.
+-- setting to 0 means any reflect CRCs will not match online calculators. the standard is flip per byte
+constant ReflectByte        : std_logic := '1'; -- DO NOT MODIFY
+
 constant reflectBoundary    : integer := 8; -- remove this
 constant poly_i             : std_logic_vector((Polynomial'length) downto 0) := '1' & Polynomial;
 constant ReflectInputBytes  : std_logic := ReflectIO;
@@ -103,11 +104,6 @@ else generate -- vhdl 2008 only
   poly <= poly_i;
 end generate;
 
--- if/else generate supported in vhdl 2008, older versions need two generate statements
---DescendingPolyGen : if (poly_i'ascending = false) generate
---  poly <= poly_i;
---end generate;
-
 -- Same as above but with data, make sure in descending index format.
 AscendingDataGen : if (data'ascending = true) generate
   DataFlipGen : for i in 0 to (data'length - 1) generate
@@ -116,11 +112,6 @@ AscendingDataGen : if (data'ascending = true) generate
 else generate -- vhdl 2008 only
   data_r    <= data;
 end generate;
-
--- if/else generate supported in vhdl 2008, older versions need two generate statements
---DescendingDataGen : if (data'ascending = false) generate
---  data_r    <= data;
---end generate;
 
 -- top IO
 reflectFinalGen : if (ReflectIO = '1' AND checksum_i'length > 8) generate
@@ -148,7 +139,7 @@ ReflectInputBytesGen : if (ReflectInputBytes = '1') generate
     end generate;
 
   else generate
-    
+    -- this works but is NOT CRC standard - leave as custom? flips bit by bit entire vector, instead of per byte
     DataReflectGen : for i in 0 to (data_r'length - 1) generate
       data_i(i) <= data_r((data_r'length - 1) - i);
     end generate;
@@ -158,12 +149,6 @@ ReflectInputBytesGen : if (ReflectInputBytes = '1') generate
 else generate -- vhdl 2008
   data_i <= data_r;
 end generate;
-
-
---ReflectInputBytesGen2 : if (ReflectInputBytes = '0') generate
---  data_i <= data_r;
---end generate;
-
 
 -- serialize input data vector
 serialize_data : process(clk)
@@ -201,7 +186,7 @@ begin
         end if;
 
       -- NonDirect method, flush with zero's.
-      when NONDIRECT_FLUSH => 
+      when NONDIRECT_FLUSH => -- THIS DOESN'T WORK ANYMORE
         b <= '0';
         if (data_idx = 0) then
           crc_calc_en      <= '0';
@@ -224,6 +209,7 @@ begin
   end if;
 end process;
 
+-- DIRECT ONLY. THIS DOESN'T WORK ANYMORE
 -- Requires at least 1 full clk cycle after coming out of reset to allow initial conditions to update.
 NonDirect_method : if (DirectMethod = '0') generate 
   crc_direct : process(clk)
@@ -296,7 +282,7 @@ ReflectChecksumGen : if (ReflectChecksums = '1') generate
     end generate;
 
   else generate
-
+    -- this works but is NOT CRC standard - leave as custom? flips bit by bit entire vector, instead of per byte
     ReflectChecksumBitsGen : for i in 0 to (d'length - 1) generate
       checksum_reflect(i) <= d((d'length - 1) - i);
     end generate;
@@ -306,11 +292,6 @@ ReflectChecksumGen : if (ReflectChecksums = '1') generate
 else generate -- vhdl 2008
   checksum_reflect <= d;
 end generate;
-
---ReflectChecksumGen2 : if (ReflectChecksums = '0') generate
---  checksum_reflect <= d;
---end generate;
-
 
 -- final XOR, latch checksum value, and pulse ready strobe
 checksum_latch : process(clk)
@@ -333,7 +314,6 @@ begin
     end if;
   end if;
 end process;
-
 
 ----------------------------------------------------------------------------------------------------
 -- parallel

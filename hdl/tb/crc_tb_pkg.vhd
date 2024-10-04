@@ -91,8 +91,6 @@ package crc_pkg is
 
   type innerArray is array (natural range <>) of std_logic_vector;
   type csumArray  is array (natural range <>) of InnerArray;
-  --type csArray    is array (natural range <>) of array (natural range <>) of std_logic_vector(7 downto 0);
-
 
   constant CRC8_MAX   : natural := 10;
   constant CRC16_MAX  : natural := 23;
@@ -100,7 +98,6 @@ package crc_pkg is
   constant TESTS_MAX  : natural := 3;
 
   type crc8_rec is record 
---    res  : dataArray(0 to CRC8_MAX-1)(7 downto 0);
     chk  : dataArray(0 to CRC8_MAX-1)(7 downto 0);
     poly : dataArray(0 to CRC8_MAX-1)(7 downto 0);
     init : dataArray(0 to CRC8_MAX-1)(7 downto 0);
@@ -110,7 +107,6 @@ package crc_pkg is
   end record crc8_rec;
 
   type crc16_rec is record 
---    res  : dataArray(0 to CRC16_MAX-1)(15 downto 0);
     chk  : dataArray(0 to CRC16_MAX-1)(15 downto 0);
     poly : dataArray(0 to CRC16_MAX-1)(15 downto 0);
     init : dataArray(0 to CRC16_MAX-1)(15 downto 0);
@@ -120,7 +116,6 @@ package crc_pkg is
   end record crc16_rec;
 
   type crc32_rec is record 
---    res  : dataArray(0 to CRC32_MAX-1)(31 downto 0);
     chk  : dataArray(0 to CRC32_MAX-1)(31 downto 0);
     poly : dataArray(0 to CRC32_MAX-1)(31 downto 0);
     init : dataArray(0 to CRC32_MAX-1)(31 downto 0);
@@ -130,7 +125,6 @@ package crc_pkg is
   end record crc32_rec;
 
   constant CRC8_CONFIG : crc8_rec := (
---    res  => (x"1B", x"21",  x"83",  x"2B",  x"A6",  x"97",  x"4E",  x"3F",  x"59",  x"F6"),
     chk  => (x"F4", x"DA",  x"15",  x"BC",  x"97",  x"7E",  x"A1",  x"A1",  x"D0",  x"25"),
     poly => (x"07", x"9B",  x"39",  x"D5",  x"1D",  x"1D",  x"07",  x"31",  x"07",  x"9B"),
     init => (x"00", x"FF",  x"00",  x"00",  x"FF",  x"FD",  x"00",  x"00",  x"FF",  x"00"),
@@ -141,7 +135,6 @@ package crc_pkg is
   );
 
   constant CRC16_CONFIG : crc16_rec := (
---    res  => (x"B155",x"03C0",x"9C39",x"001E",x"1259",x"8E1D",x"13AC",x"13AD",x"10D9",x"370E",x"4EAA",x"FC3F",x"582A",x"CE19",x"39B2",x"C372",x"D29A",x"BC80",x"0653",x"57AD",x"437F",x"A7D5",x"50A5"),
     chk  => (x"29B1",x"BB3D",x"E5CC",x"FEE8",x"4C06",x"9ECF",x"007E",x"007F",x"EA82",x"C2B7",x"D64E",x"44C2",x"6F91",x"63D0",x"D0DB",x"0FB3",x"26B1",x"B4C8",x"BF05",x"2189",x"4B37",x"906E",x"31C3"),
     poly => (x"1021",x"8005",x"1021",x"8005",x"C867",x"8005",x"0589",x"0589",x"3D65",x"3D65",x"1021",x"8005",x"1021",x"1021",x"8BB7",x"A097",x"1021",x"8005",x"1021",x"1021",x"8005",x"1021",x"1021"),
     init => (x"FFFF",x"0000",x"1D0F",x"0000",x"FFFF",x"800D",x"0000",x"0000",x"0000",x"0000",x"FFFF",x"0000",x"FFFF",x"B2AA",x"0000",x"0000",x"89EC",x"FFFF",x"C6C6",x"0000",x"FFFF",x"FFFF",x"0000"),
@@ -152,7 +145,6 @@ package crc_pkg is
   );
 
   constant CRC32_CONFIG : crc32_rec := (
---    res  => (x"A2681B02",x"A6322B20",x"678C474D",x"FAF0A950",x"5D97E4FD",x"59CDD4DF",x"E83A9494",x"078785FA",x"00000213"),
     chk  => (x"CBF43926",x"FC891918",x"E3069283",x"87315576",x"340BC6D9",x"0376E6E7",x"765E7680",x"3010BF7F",x"BD0BE338"),
     poly => (x"04C11DB7",x"04C11DB7",x"1EDC6F41",x"A833982B",x"04C11DB7",x"04C11DB7",x"04C11DB7",x"814141AB",x"000000AF"),
     init => (x"FFFFFFFF",x"FFFFFFFF",x"FFFFFFFF",x"FFFFFFFF",x"FFFFFFFF",x"FFFFFFFF",x"00000000",x"00000000",x"00000000"),
@@ -161,22 +153,6 @@ package crc_pkg is
     refo => ('1','0','1','1','1','0','0','0','0')
     --        0   1   2   3   4   5   6   7   8
   );
-
-
---  constant test_data4   : dataArray(0 to TESTS_MAX-1)(3 downto 0)   := (x"5", x"a");
---
---  constant test_data8   : dataArray(0 to TESTS_MAX-1)(7 downto 0)   := (x"05", x"75");
---  constant chksums8     : csumArray(0 to TESTS_MAX-1)(0 to CRC8_MAX-1)(7 downto 0) := (
---    (x"1B", x"21",  x"83",  x"2B",  x"A6",  x"97",  x"4E",  x"3F",  x"59",  x"F6"),
---    (x"4C", x"BF",  x"65",  x"40",  x"C3",  x"CE",  x"19",  x"C7",  x"0D",  x"58"));
---  
---  
---  constant test_data12  : dataArray(0 to TESTS_MAX-1)(11 downto 0)  := (x"105", x"f75");
---  constant test_data16  : dataArray(0 to TESTS_MAX-1)(15 downto 0)  := (x"c105", x"0f75");
---  constant test_data20  : dataArray(0 to TESTS_MAX-1)(19 downto 0)  := (x"9c105", x"90f75");
---  constant test_data32  : dataArray(0 to TESTS_MAX-1)(31 downto 0)  := (x"1239c105", x"56790f75");
---  constant test_data36  : dataArray(0 to TESTS_MAX-1)(35 downto 0)  := (x"01239c105", x"d56790f75");
-
 
   type data8_test_rec is record 
     data    : dataArray(0 to TESTS_MAX-1)(7 downto 0); -- input value
