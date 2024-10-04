@@ -1,9 +1,5 @@
--- TODO 2024:
--- CRC does not match online tool when reflect is true and data is greater than 8bits 
---    ReflectInputBytesGen : check this, not really reflecting 'bytes', refelects the entire data
---        this may be why it works for 8bits only. try reflecting each byte... 
---        *Confirmed this probably the issue (stackoverflow)
---    ReflectChecksumGen : same as above, per byte
+-- Input data width must be divisible by 8.
+-- 
 -------------------------------------------------------------------------------
 -- Title      : Generic CRC
 -- Project    : 
@@ -37,7 +33,7 @@ entity generic_crc is
     --Polynomial        : std_logic_vector  := "100000111"; -- default = z^8 + z^2 + z + 1
     Polynomial        : std_logic_vector  := "00000111"; -- default = z^8 + z^2 + z + 1 = x"07"
     InitialConditions : std_logic_vector  := "0";         --
-    DirectMethod      : std_logic         := '1';         -- more efficient, zero shifts not needed as in non-direct
+--    DirectMethod      : std_logic         := '1';         -- more efficient, zero shifts not needed as in non-direct
 --    ReflectInputBytes : std_logic         := '0';         --
 --    ReflectChecksums  : std_logic         := '0';         --
     ReflectIO         : std_logic         := '0';
@@ -59,6 +55,8 @@ architecture rtl of generic_crc is
 -- components
 
 -- constants
+-- nondirect method no longer works. somehow it broke when fixing reflect/byte swapping issues. don't care / don't fix, just remove
+constant DirectMethod       : std_logic := '1'; -- DO NOT MODIFY
 constant reflectBoundary    : integer := 8; -- remove this
 constant poly_i             : std_logic_vector((Polynomial'length) downto 0) := '1' & Polynomial;
 constant ReflectInputBytes  : std_logic := ReflectIO;

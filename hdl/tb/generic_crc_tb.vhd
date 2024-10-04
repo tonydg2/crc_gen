@@ -33,7 +33,7 @@ constant rb           : std_logic        := '1';
 
 --constant data         : std_logic_vector := x"45ababab99";
 --constant data         : std_logic_vector := x"5a66666b";
-constant data         : std_logic_vector := x"fa05";
+constant data         : std_logic_vector := x"fa051234554d";
 
 --signal checksum     : std_logic_vector((poly'length - 2) downto 0);
 signal checksum     : std_logic_vector((poly'length - 1) downto 0);
@@ -94,7 +94,7 @@ begin
   for i in 0 to (TESTS_MAX-1) loop 
     for x in 0 to (CRC8_MAX-1) loop 
       --wait until (checksum_rdy = '1');
-      if (cs8(i)(x) = DATA16_TEST_VALUES.csum8(i)(x)) then 
+      if (cs8(i)(x) = DATA48_TEST_VALUES.csum8(i)(x)) then 
 --      if (cs8(i)(x) = chksums8(i)(x)) then 
         verif8(i)(x) <= "1";
       else 
@@ -113,7 +113,7 @@ begin
 
   for i in 0 to (TESTS_MAX-1) loop 
     for x in 0 to (CRC16_MAX-1) loop 
-      if (cs16(i)(x) = DATA16_TEST_VALUES.csum16(i)(x)) then 
+      if (cs16(i)(x) = DATA48_TEST_VALUES.csum16(i)(x)) then 
         verif16(i)(x) <= "1";
       else 
         verif16(i)(x) <= "0";
@@ -124,7 +124,7 @@ begin
 
   for i in 0 to (TESTS_MAX-1) loop 
     for x in 0 to (CRC32_MAX-1) loop 
-      if (cs32(i)(x) = DATA16_TEST_VALUES.csum32(i)(x)) then 
+      if (cs32(i)(x) = DATA48_TEST_VALUES.csum32(i)(x)) then 
         verif32(i)(x) <= "1";
       else 
         verif32(i)(x) <= "0";
@@ -181,7 +181,6 @@ end process;
     generic map (
       Polynomial        => poly,          -- std_logic_vector := "100000111";-- default = z^8 + z^2 + z + 1
       InitialConditions => init,          -- std_logic_vector := "0";
-      DirectMethod      => '1',           -- std_logic := '0';
       --ReflectInputBytes => refin,         -- std_logic := '0';
       --ReflectChecksums  => refout,        -- std_logic := '0';
       ReflectIO         => refio,
@@ -251,7 +250,6 @@ gen_crc8_test : for i in 0 to (TESTS_MAX-1) generate
         --ReflectChecksums  => CRC8_CONFIG.refo(x),
         ReflectIO         => CRC8_CONFIG.refi(x),
         FinalXOR          => CRC8_CONFIG.fxor(x),
-        DirectMethod      => '1',
 --        ReflectByte       => rb,
         ChecksumsPerFrame => 1
         )
@@ -259,7 +257,7 @@ gen_crc8_test : for i in 0 to (TESTS_MAX-1) generate
         clk               => clk,       -- in  std_logic;
         rst               => rst,       -- in  std_logic;
         crc_en            => crc_en,    -- in  std_logic;
-        data              => DATA16_TEST_VALUES.data(i),      -- in  std_logic_vector
+        data              => DATA48_TEST_VALUES.data(i),      -- in  std_logic_vector
         checksum          => cs8(i)(x),      -- out std_logic_vector
         checksum_rdy      => open       -- out std_logic
         );
@@ -276,7 +274,6 @@ gen_crc16_test : for i in 0 to (TESTS_MAX-1) generate
         --ReflectChecksums  => CRC16_CONFIG.refo(x),
         ReflectIO         => CRC16_CONFIG.refi(x),
         FinalXOR          => CRC16_CONFIG.fxor(x),
-        DirectMethod      => '1',
 --        ReflectByte       => rb,
         ChecksumsPerFrame => 1
         )
@@ -284,7 +281,7 @@ gen_crc16_test : for i in 0 to (TESTS_MAX-1) generate
         clk               => clk,       -- in  std_logic;
         rst               => rst,       -- in  std_logic;
         crc_en            => crc_en,    -- in  std_logic;
-        data              => DATA16_TEST_VALUES.data(i),      -- in  std_logic_vector
+        data              => DATA48_TEST_VALUES.data(i),      -- in  std_logic_vector
         checksum          => cs16(i)(x),      -- out std_logic_vector
         checksum_rdy      => open       -- out std_logic
         );
@@ -301,7 +298,6 @@ gen_crc32_test : for i in 0 to (TESTS_MAX-1) generate
         --ReflectChecksums  => CRC32_CONFIG.refo(x),
         ReflectIO         => CRC32_CONFIG.refi(x),
         FinalXOR          => CRC32_CONFIG.fxor(x),
-        DirectMethod      => '1',
 --        ReflectByte       => rb,
         ChecksumsPerFrame => 1
         )
@@ -309,7 +305,7 @@ gen_crc32_test : for i in 0 to (TESTS_MAX-1) generate
         clk               => clk,       -- in  std_logic;
         rst               => rst,       -- in  std_logic;
         crc_en            => crc_en,    -- in  std_logic;
-        data              => DATA16_TEST_VALUES.data(i),      -- in  std_logic_vector
+        data              => DATA48_TEST_VALUES.data(i),      -- in  std_logic_vector
         checksum          => cs32(i)(x),      -- out std_logic_vector
         checksum_rdy      => open       -- out std_logic
         );
