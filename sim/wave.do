@@ -1,9 +1,11 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
-add wave -noupdate /generic_crc_tb/generic_crc_inst/data_i
-add wave -noupdate /generic_crc_tb/generic_crc_inst/checksum_o
+add wave -noupdate /generic_crc_tb/crc8p2/data_i
+add wave -noupdate /generic_crc_tb/crc8p2/data_valid_i
+add wave -noupdate /generic_crc_tb/crc8p2/crc_o
+add wave -noupdate /generic_crc_tb/crc8p2/data
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {14736 ps} 0}
+WaveRestoreCursors {{Cursor 1} {894603 ps} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 150
 configure wave -valuecolwidth 100
@@ -19,4 +21,4 @@ configure wave -griddelta 40
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ps} {374236 ps}
+WaveRestoreZoom {0 ps} {5250 ns}

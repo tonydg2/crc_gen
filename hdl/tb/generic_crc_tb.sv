@@ -24,18 +24,18 @@ module generic_crc_tb ;
   end
   assign rst = !rstn;
 
-  localparam DATA_WIDTH       = 8;
-  
-  localparam POLY             = 8'h1d;
-  localparam INIT             = 8'hfd;
-  localparam REFLECT          = 0;
-  localparam XOROUT           = 8'h00;
-  logic [DATA_WIDTH-1:0] data = 'hAB;
+  localparam DATA_WIDTH       = 48;
+  localparam POLY_WIDTH       = 32;
+  localparam [DATA_WIDTH-1:0] data    = 'hAB5766123dda;
+  localparam [POLY_WIDTH-1:0] POLY    = 'h000000af;
+  localparam [POLY_WIDTH-1:0] INIT    = 'h0;
+  localparam REFLECT                  = 0;
+  localparam [POLY_WIDTH-1:0] XOROUT  = 'h0;
 
-  crc8_ccitt_parallel2 #(
+  crc8_ccitt_parallel5 #(
     .POLY         (POLY),       
     .INIT         (INIT),
-    .REFLECT      (0),          
+    .REFLECT      (REFLECT),          
     .XOR_OUT      (XOROUT),   
     .DATA_WIDTH   ($size(data)) 
   ) crc8p2 (
