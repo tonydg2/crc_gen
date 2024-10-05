@@ -1,18 +1,16 @@
 rm -rf crc_lib 
 rm -rf work
 
-vcom ../hdl/generic_crc.vhd         -2008 -work   crc_lib 
-vcom ../hdl/tb/crc_tb_pkg.vhd       -2008 -work   crc_lib 
-vcom ../hdl/tb/generic_crc_tb.vhd   -2008 -work   work
+vlog -sv ../hdl/generic_crc.sv        -work crc_lib
+vlog -sv ../hdl/generic_crc2.sv        -work crc_lib
+vlog -sv ../hdl/generic_crc3.sv        -work crc_lib
+vlog -sv ../hdl/generic_crc4.sv        -work crc_lib
+vlog -sv ../hdl/tb/generic_crc_tb.sv  -work work
 
-#vsim -voptargs="+acc" generic_crc_tb
-
-vsim -vopt work.generic_crc_tb -voptargs=+acc
-
-#vsim -novopt work.generic_crc_tb 
+vsim  -L crc_lib -vopt work.generic_crc_tb -voptargs=+acc
 
 log -r /*
 
-if {[file exists wave2.do]} {do wave2.do}
+if {[file exists wave.do]} {do wave.do}
 
 run 5us

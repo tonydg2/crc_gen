@@ -1,9 +1,11 @@
 rm -rf crc_lib 
 rm -rf work
 
-vcom ../hdl/generic_crc.vhd         -2008 -work   crc_lib 
-vcom ../hdl/tb/crc_tb_pkg.vhd       -2008 -work   crc_lib 
-vcom ../hdl/tb/generic_crc_tb.vhd   -2008 -work   work
+vlog -sv ../hdl/generic_crc.sv        -work crc_lib
+vlog -sv ../hdl/generic_crc2.sv        -work crc_lib
+vlog -sv ../hdl/generic_crc3.sv        -work crc_lib
+vlog -sv ../hdl/generic_crc4.sv        -work crc_lib
+vlog -sv ../hdl/tb/generic_crc_tb.sv  -work work
 
 restart
 
