@@ -32,13 +32,13 @@ module generic_crc_tb ;
   localparam REFLECT                  = 0;
   localparam [POLY_WIDTH-1:0] XOROUT  = 'h0;
 
-  crc8_ccitt_parallel5 #(
+  crc_parallel #(
     .POLY         (POLY),       
     .INIT         (INIT),
     .REFLECT      (REFLECT),          
     .XOR_OUT      (XOROUT),   
     .DATA_WIDTH   ($size(data)) 
-  ) crc8p2 (
+  ) crc_parallel (
     .clk          (clk      ),
     .reset_n      (rstn     ),
     .data_i       (data     ),
@@ -46,32 +46,6 @@ module generic_crc_tb ;
     .crc_o        (         )
 );
 
-
-
-  crc8_ccitt crc8 (
-    .clk         (clk            )      ,     // Clock
-    .reset_n     (rstn            )      ,     // Reset
-    .data_in     (8'hab          )      ,     // 8-bit input data
-    .data_valid   (crc_en)      ,
-    .crc_out      (               )            // 8-bit CRC output
-  );
-
-
-  generic_crc # (
-    .REFLECT_IO       (0            ),
-    .FINAL_XOR        (0            ),
-    .POLYWIDTH        (8            ),
-    .DATAWIDTH        (8            ),
-    .POLY             (8'b00000111  ),
-    .INIT             (8'b0         )
-  ) generic_crc_inst (
-    .clk              (clk    ),
-    .rst              (rst    ),
-    .crc_en           ('0     ),
-    .data_i           (8'hab  ),
-    .checksum_o       (       ),
-    .checksum_rdy_o   (       )
-  );
 
 //-------------------------------------------------------------------------------------------------
 //
