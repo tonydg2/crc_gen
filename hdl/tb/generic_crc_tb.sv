@@ -10,8 +10,6 @@
 
 module generic_crc_tb ;
 
-  //library crc_lib;
-
   logic clk=0, rstn=0, rst, start, crc_en;
 
   //always #2 clk = ~clk; // 250mhz period = 4ns, invert every 2ns

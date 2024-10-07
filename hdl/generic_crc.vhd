@@ -66,6 +66,8 @@ constant ReflectChecksums   : std_logic := ReflectIO;
 constant dataLen        : integer := (data'length - 1);
 constant checksumLen    : integer := (poly_i'length - 2);
 
+
+
 -- types
 type crc_sm_type is (IDLE, SHIFT, NONDIRECT_FLUSH, DIRECT_END);
 signal crc_sm : crc_sm_type;
@@ -84,6 +86,7 @@ signal checksum_rdy_i   : std_logic;
 signal poly             : std_logic_vector((poly_i'length - 1) downto 0);-- := "100000111";-- z^8 + z^2 + z + 1
 signal d                : std_logic_vector((poly'length - 2) downto 0);
 
+constant num_bytes : integer := checksum_i'length / 8;
 ----------------------------------------------------------------------------------------------------
 begin  -- architecture
 -------------------------------------------------------------------------------------------------       
@@ -115,8 +118,8 @@ end generate;
 
 -- top IO
 reflectFinalGen : if (ReflectIO = '1' AND checksum_i'length > 8) generate
-  constant num_bytes : integer := checksum_i'length / 8;
-  SwapBytes: for i in 0 to num_bytes - 1 generate
+  
+  SwapBytes: for i in 0 to (num_bytes - 1) generate
     checksum((i+1)*8 - 1 downto i*8) <= checksum_i((num_bytes-i)*8 - 1 downto (num_bytes-i-1)*8);
   end generate;
 else generate
